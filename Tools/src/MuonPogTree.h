@@ -25,13 +25,9 @@ namespace muon_pog {
   
   class GenParticle {
   public:
-    
-    GenParticle(){};
-    virtual ~GenParticle(){};
-    
+        
     Int_t pdgId;  // PDG identifier
     Int_t status; // MC status
-    bool IsPrompt; // GenStatusFlag: Lepton is NOT coming from hadron or tau decay 
     Float_t energy; // energy [GeV]
     Float_t pt; // pt [GeV]
     Float_t eta; // eta
@@ -40,17 +36,10 @@ namespace muon_pog {
     Float_t vy; // y coordinate of production vertex [cm]
     Float_t vz; // z coordinate of production vertex [cm]
     std::vector<Int_t> mothers; // vector of indices of mothers
+    std::vector<bool> flags;    
 
-    void SetFlags(reco::GenStatusFlags statusflags){
-      _flags.clear();
-      for (unsigned int fl = 0; fl < 15; fl++) 
-	_flags.push_back(statusflags.flags_[fl]);      
-    }
-    
-    bool flags( int flag ) { return _flags[flag]; }
-    
-  private:
-    std::vector<bool> _flags;    
+    GenParticle(){};
+    virtual ~GenParticle(){};
     
     ClassDef(GenParticle,1)
   };
