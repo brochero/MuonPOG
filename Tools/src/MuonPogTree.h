@@ -5,9 +5,6 @@
 #include "TMath.h"
 #include <vector>
 #include <string>
-#include "DataFormats/HepMCCandidate/interface/GenStatusFlags.h"
-#include "DataFormats/PatCandidates/interface/Muon.h"
-
 
 namespace muon_pog {
 
@@ -36,8 +33,8 @@ namespace muon_pog {
     Float_t vy; // y coordinate of production vertex [cm]
     Float_t vz; // z coordinate of production vertex [cm]
     std::vector<Int_t> mothers; // vector of indices of mothers
-    std::vector<bool> flags;    
-
+    std::vector<bool>  flags;   // vector of flags, in the same order of
+                                //  of "DataFormats/HepMCCandidate/interface/GenStatusFlag.h"
     GenParticle(){};
     virtual ~GenParticle(){};
     
@@ -204,13 +201,18 @@ namespace muon_pog {
     Float_t muonTime; 
     Float_t muonTimeErr;
 
+    // Muon time 
+    Float_t muonRpcTimeDof; 
+    Float_t muonRpcTime; 
+    Float_t muonRpcTimeErr;
+
     std::vector<HitInfo> hits;
     std::vector<ChambMatch> matches;
 
     Muon(){};
     virtual ~Muon(){};
 
-    ClassDef(Muon,2)
+    ClassDef(Muon,3)
   };
 
   class HLTObject {
@@ -226,6 +228,26 @@ namespace muon_pog {
 
     ClassDef(HLTObject,1)
 
+  };
+    
+  class L1Muon {
+  public:
+        
+    Float_t pt;  // pt [GeV]
+    Float_t eta; // eta
+    Float_t phi; // phi
+    Int_t charge; //charge (0 if invalid)
+      
+    Int_t quality;
+    Int_t bx;
+      
+    Int_t tfIndex;
+    
+    L1Muon(){};
+    virtual ~L1Muon(){};
+      
+    ClassDef(L1Muon,1)
+      
   };
 
   class HLT {
@@ -286,11 +308,12 @@ namespace muon_pog {
     std::vector<muon_pog::Muon> muons; // vector of muons
     muon_pog::METs mets;  // vector of different MET definitions 
     muon_pog::HLT hlt;                 // HLT objects
-
+    std::vector <muon_pog::L1Muon> l1muons; //vector with the L1 muon candidates
+      
     Event(){};
     virtual ~Event(){};
 
-    ClassDef(Event,3)
+    ClassDef(Event,5)
   };
 
 }

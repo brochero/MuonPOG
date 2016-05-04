@@ -1,4 +1,4 @@
-import FWCore.ParameterSet.Config as cms
+Import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 
 import subprocess
@@ -8,7 +8,7 @@ import sys
 options = VarParsing.VarParsing()
 
 options.register('globalTag',
-                 '74X_dataRun2_Prompt_v4', #default value
+                 '80X_mcRun2_asymptotic_2016_v3', #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.string,
                  "Global Tag")
@@ -20,19 +20,19 @@ options.register('nEvents',
                  "Maximum number of processed events")
 
 options.register('eosInputFolder',
-                 '/store/data/Run2015D/SingleMuon/AOD/PromptReco-v3/000/258/158/00000', #default value
+                 '/store/relval/CMSSW_8_0_3/RelValZMM_13/MINIAODSIM/PU25ns_80X_mcRun2_asymptotic_2016_v3_gs71xNewGtHcalCust-v1/00000', #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.string,
                  "EOS folder with input files")
 
 options.register('ntupleName',
-                 './muonPOGNtuple_DATA_SingleMu.root', #default value
+                 './muonPOGNtuple_miniAOD_8_0_3_RelValZMM_13.root', #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.string,
                  "Folder and name ame for output ntuple")
 
 options.register('runOnMC',
-                 False, #default value
+                 True, #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.bool,
                  "Run on DATA or MC")
@@ -44,13 +44,13 @@ options.register('hltPathFilter',
                  "Filter on paths (now only accepts all or IsoMu20)")
 
 options.register('minMuPt',
-                 0., #default value
+                 5., #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.float,
-                 "Skim the ntuple counting for TRK || GLB muons with pT > of this value")
+                 "Skim the ntuple selecting only STA || TRK || GLB muons with pT > of this value")
 
 options.register('minNMu',
-                 0, #default value
+                 1, #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.int,
                  "number of TRK or GLB muons with pT > minMuPt to pass the skim")
@@ -77,9 +77,8 @@ process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.nEvents))
 
-
-
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
+process.GlobalTag.globaltag = cms.string(options.globalTag)
 
 process.source = cms.Source("PoolSource",
                             
@@ -96,9 +95,12 @@ process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 #process.load("Geometry.CommonDetUnit.globalTrackingGeometry_cfi")
 #process.load("RecoMuon.DetLayers.muonDetLayerGeometry_cfi")
 
-from MuonPOG.Tools.MuonPogNtuples_cff import appendMuonPogNtuple
+from MuonPOG.Tools.MuonPogNtuples_cff import appendMuonPogNtuple, customiseHlt, customiseMuonCuts
+    
+appendMuonPogNtuple(process,options.runOnMC,"HLT",options.ntupleName)
 
-appendMuonPogNtuple(process,options.runOnMC,"HLT",options.ntupleName,pathCut,filterCut)
+customiseHlt(process,pathCut,filterCut)
+customiseMuonCuts(process,options.minMuPt,options.minNMu)
 
 process.MuonPogTree.MuonTag = cms.untracked.InputTag("slimmedMuons")
 process.MuonPogTree.PrimaryVertexTag = cms.untracked.InputTag("offlineSlimmedPrimaryVertices")
@@ -107,7 +109,3 @@ process.MuonPogTree.TrigSummaryTag = cms.untracked.InputTag("none")
 process.MuonPogTree.PFMetTag = cms.untracked.InputTag("none")
 process.MuonPogTree.PFChMetTag = cms.untracked.InputTag("none")
 process.MuonPogTree.CaloMetTag = cms.untracked.InputTag("none")
-
-process.MuonPogTree.MinMuPtCut = cms.untracked.double(options.minMuPt)
-process.MuonPogTree.MinNMuCut  = cms.untracked.int32(options.minNMu)
-
