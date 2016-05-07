@@ -1,4 +1,4 @@
-//////////////////////////////////////
+///////////////////////////////////////
 // Dump muon related information for a specific event
 //////////////////////////////////////
 
@@ -83,6 +83,8 @@ private:
   void printMuons(const edm::Handle<edm::View<reco::Muon> > &,
 		  const edm::Handle<std::vector<reco::Vertex> > &,
 		  const edm::Handle<reco::BeamSpot> &) const ;
+
+  void printMediumIDCuts(const reco::Muon &) const ;
 
   void printTrack(const reco::Track * track,
 		  const std::string & trackType) const;
@@ -208,15 +210,18 @@ void MuonEventDumper::analyze (const edm::Event & ev, const edm::EventSetup &)
 
   auto tracks = conditionalGet<edm::View<reco::Track> >(ev,adHocTrackToken_, "AdHocTracks");
 
-  std::cout << "Ad-hoc trackcollection is " + adHocTrackLabel_ + " and has size: " << tracks->size() << std::endl;
-
-  edm::View<reco::Track> ::const_iterator trackIt  = tracks->begin();
-  edm::View<reco::Track> ::const_iterator trackEnd = tracks->end();
-
-  for (; trackIt != trackEnd; ++trackIt) 
+  if (tracks.isValid())
     {
-      printTrack(&(*trackIt),adHocTrackLabel_);
-    }      
+      std::cout << "Ad-hoc trackcollection is " + adHocTrackLabel_ + " and has size: " << tracks->size() << std::endl;
+
+      edm::View<reco::Track> ::const_iterator trackIt  = tracks->begin();
+      edm::View<reco::Track> ::const_iterator trackEnd = tracks->end();
+
+      for (; trackIt != trackEnd; ++trackIt) 
+	{
+	  printTrack(&(*trackIt),adHocTrackLabel_);
+	}      
+    }
   
 }
 
@@ -416,6 +421,30 @@ void MuonEventDumper::printTrack(const reco::Track * track, const std::string & 
   
 }
 
+void MuonEventDumper::printMediumIDCuts(const reco::Muon & muon) const
+{
+
+  std::cout << "[MUON MEDIUM ID CUTS]: " 
+	    << "\n\tIs Loose: " << muon::isLooseMuon(muon);
+
+  if(muon::isLooseMuon(muon))
+    {
+      std::cout << "\n\tValid Trk Hits Fraction: " << muon.innerTrack()->validFraction()
+		<< "\n\tIs Global: " << muon.isGlobalMuon();
+
+      if (muon.isGlobalMuon())
+	std::cout << "\n\tNorm. Glb. Chi2: " << muon.globalTrack()->normalizedChi2()
+		  << "\n\tTrk-Sta position match: " << muon.combinedQuality().chi2LocalPosition
+		  << "\n\tKink: " << muon.combinedQuality().trkKink;
+      
+      std::cout << "\n\tSegm Comp: " << muon::segmentCompatibility(muon);
+    }
+  
+  std::cout << std::endl;
+
+}
+
+
 void MuonEventDumper::printMuons(const edm::Handle<edm::View<reco::Muon> > & muons,
 				    const edm::Handle<std::vector<reco::Vertex> > & vertexes,
 				    const edm::Handle<reco::BeamSpot> & beamSpot) const
@@ -483,14 +512,14 @@ void MuonEventDumper::printMuons(const edm::Handle<edm::View<reco::Muon> > & muo
       if (!mu.globalTrack().isNull())
 	printTrack(mu.globalTrack().get(),"GLB");
 
-      if (!mu.pickyTrack().isNull())
-	printTrack(mu.pickyTrack().get(),"PICKY");
+      if (!mu.pickyTrack().isNull() && mu.pickyTrack().isAvailable())
+       	printTrack(mu.pickyTrack().get(),"PICKY");
 
-      if (!mu.tpfmsTrack().isNull())
+      if (!mu.tpfmsTrack().isNull() && mu.tpfmsTrack().isAvailable())
 	printTrack(mu.tpfmsTrack().get(),"TPFMS");
 
-      if (!mu.dytTrack().isNull())
-	printTrack(mu.dytTrack().get(),"DYT");
+      if (!mu.dytTrack().isNull() && mu.dytTrack().isAvailable())
+       	printTrack(mu.dytTrack().get(),"DYT");
       
       if (!mu.outerTrack().isNull())
 	printTrack(mu.outerTrack().get(),"STANDALONE");
@@ -507,9 +536,12 @@ void MuonEventDumper::printMuons(const edm::Handle<edm::View<reco::Muon> > & muo
       std::cout << "It passes the : "
 		<< (muon::isSoftMuon(mu,vertex)     ? "SOFT " : "")
 		<< (muon::isLooseMuon(mu)           ? "LOOSE " : "")
+		<< (muon::isMediumMuon(mu)         ? "MEDIUM " : "")
 		<< (muon::isTightMuon(mu,vertex)    ? "TIGHT " : "")
 		<< (muon::isHighPtMuon(mu,vertex) ? "HIGH_PT " : "")
 		<< " IDs." << std::endl;      
+
+      printMediumIDCuts(mu);
 
       reco::MuonIsolation iso03 = mu.isolationR03();
       printIsolation(iso03,"0.3");
