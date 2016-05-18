@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 SCRAM_ARCH=slc6_amd64_gcc530
 
 file=$0
