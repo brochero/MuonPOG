@@ -236,20 +236,20 @@ int main(int argc, char* argv[]){
       // Initialize pointers to summary and full event structure
 
       muon_pog::Event* ev = new muon_pog::Event();
-      TTree* tree;
+      TChain* tree;
       TBranch* evBranch;
 
       // Open file, get tree, set branches
       //TFile* inputFile = TFile::Open(fileName,"READONLY");
       //tree = (TTree*)inputFile->Get("MUONPOGTREE");
       //if (!tree) inputFile->GetObject("MuonPogTree/MUONPOGTREE",tree);
-      tree = (TTree *) openFileOrDir(fileName.Data());
+      tree = openFileOrDir(fileName.Data());
 
       evBranch = tree->GetBranch("event");
       evBranch->SetAddress(&ev);
 
       // Watch number of entries
-      int nEntries = plotter.m_sampleConfig.nEvents > 0 ? plotter.m_sampleConfig.nEvents : tree->GetEntriesFast();
+      int nEntries = plotter.m_sampleConfig.nEvents > 0 ? plotter.m_sampleConfig.nEvents : tree->GetEntries();
       std::cout << "[" << argv[0] << "] Number of entries = " << nEntries << std::endl;
 
       if (nEntries < plotter.m_sampleConfig.nEvents || plotter.m_sampleConfig.nEvents < 0)
