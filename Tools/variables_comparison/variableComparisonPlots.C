@@ -54,7 +54,9 @@ namespace muon_pog {
     Float_t cSection;
     Int_t nEvents;
     Bool_t applyReweighting;
-        
+    Bool_t noTrigger;
+    std::vector<int> runs;
+ 
     SampleConfig() {};
     
 #ifndef __MAKECINT__ // CB CINT doesn't like boost :'-(    
@@ -62,6 +64,9 @@ namespace muon_pog {
 #endif
 
     ~SampleConfig() {};
+
+ private:
+    std::vector<int> toArray(const std::string & entries);
     
   };
 
@@ -235,10 +240,10 @@ int main(int argc, char* argv[]){
       TBranch* evBranch;
 
       // Open file, get tree, set branches
-
-      TFile* inputFile = TFile::Open(fileName,"READONLY");
-      tree = (TTree*)inputFile->Get("MUONPOGTREE");
-      if (!tree) inputFile->GetObject("MuonPogTree/MUONPOGTREE",tree);
+      //TFile* inputFile = TFile::Open(fileName,"READONLY");
+      //tree = (TTree*)inputFile->Get("MUONPOGTREE");
+      //if (!tree) inputFile->GetObject("MuonPogTree/MUONPOGTREE",tree);
+      tree = (TTree *) openFileOrDir(fileName.Data());
 
       evBranch = tree->GetBranch("event");
       evBranch->SetAddress(&ev);
@@ -271,7 +276,7 @@ int main(int argc, char* argv[]){
 	}
       
       delete ev;
-      inputFile->Close();
+      //inputFile->Close();
     }
   
   muon_pog::comparisonPlots(plotters,outputFile,dirName);
@@ -334,6 +339,8 @@ muon_pog::SampleConfig::SampleConfig(boost::property_tree::ptree::value_type & v
       cSection = vt.second.get<Float_t>("cSection");
       nEvents  = vt.second.get<Int_t>("nEvents");
       applyReweighting = vt.second.get<Bool_t>("applyReweighting");
+      runs = toArray(vt.second.get<std::string>("runs"));
+      noTrigger    = vt.second.get<Bool_t>("noTrigger");
     }
   
   catch (boost::property_tree::ptree_bad_data bd)
@@ -343,6 +350,20 @@ muon_pog::SampleConfig::SampleConfig(boost::property_tree::ptree::value_type & v
       throw std::runtime_error("Bad INI variables");
     }
   
+}
+
+
+
+std::vector<int> muon_pog::SampleConfig::toArray(const std::string& entries)
+{
+
+  std::vector<int> result;
+  std::stringstream sentries(entries);
+  std::string item;
+  while(std::getline(sentries, item, ','))
+    result.push_back(atoi(item.c_str()));
+  return result;
+
 }
 
 
@@ -626,11 +647,22 @@ void muon_pog::Plotter::book(TFile *outFile)
 }
 
 void muon_pog::Plotter::fill(const std::vector<muon_pog::Muon> & muons,
-			     const muon_pog::HLT & hlt, int nVtx, float weight, Int_t run)
+			     const muon_pog::HLT & hlt, int nVtx, float weight, Int_t run_)
 {
   
   TLorentzVector emptyTk;
-    
+  
+  bool isGoodRun = false; 
+
+  for (auto run :m_sampleConfig.runs)
+    {
+      if (run == 0 || run == run_)
+        {
+          isGoodRun = true;
+          break;
+        }
+    }
+   
   //muon timing only
   for (auto & muon : muons)
     {
@@ -644,18 +676,22 @@ void muon_pog::Plotter::fill(const std::vector<muon_pog::Muon> & muons,
       if (muon.isStandAlone && fabs(muon.eta) > 1.2  && muon.nHitsStandAlone > 11)
 	m_plots[TIME]["STAmuonTimeEndcap"].fill(muon.muonTime,emptyTk,weight,nVtx);
     }
-  
-  if (!muon_pog::pathHasFired(hlt,m_tnpConfig.hlt_path)) return;
+
+  if (!muon_pog::pathHasFired(hlt,m_tnpConfig.hlt_path) && !m_sampleConfig.noTrigger) return;
+  //if (!muon_pog::pathHasFired(hlt,m_tnpConfig.hlt_path)) return;
 
   std::vector<const muon_pog::Muon *> tagMuons;
   
   for (auto & muon : muons)
     {
       if (muon_pog::hasGoodId(muon,m_tnpConfig.tag_ID) && 
-	  muon_pog::muonTk(muon,m_tnpConfig.muon_trackType).Pt() > 
-	  muon_pog::hasFilterMatch(muon,hlt,
-				   m_tnpConfig.tag_hltFilter,
-				   m_tnpConfig.tag_hltDrCut) &&
+	  muon_pog::muonTk(muon,m_tnpConfig.muon_trackType).Pt() > m_tnpConfig.tag_minPt &&
+          (m_sampleConfig.noTrigger || muon_pog::hasFilterMatch(muon,hlt,
+                                   m_tnpConfig.tag_hltFilter,
+                                   m_tnpConfig.tag_hltDrCut)) &&
+          //(muon_pog::hasFilterMatch(muon,hlt,
+          //                       m_tnpConfig.tag_hltFilter,
+          //                       m_tnpConfig.tag_hltDrCut)) &&
 	  muon.isoPflow04 < m_tnpConfig.tag_isoCut)
 	tagMuons.push_back(&muon);
     }
@@ -882,7 +918,7 @@ void muon_pog::Plotter::fill(const std::vector<muon_pog::Muon> & muons,
   
   // m_plots[CONT]["04_nProbesVsnTags"]->Fill(tagMuons.size(),probeMuons.size());
 
-  m_plots[CONT]["04-runNumber"].fill(run,emptyTk,weight,nVtx);
+  m_plots[CONT]["04-runNumber"].fill(run_,emptyTk,weight,nVtx);
 		     
   
   for (auto probeMuonPointer : probeMuons)
