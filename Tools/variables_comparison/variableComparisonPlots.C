@@ -245,6 +245,7 @@ int main(int argc, char* argv[]){
       //if (!tree) inputFile->GetObject("MuonPogTree/MUONPOGTREE",tree);
       tree = openFileOrDir(fileName.Data());
 
+      tree->SetBranchAddress("event", &ev);
 
       // Watch number of entries
       int nEntries = plotter.m_sampleConfig.nEvents > 0 ? plotter.m_sampleConfig.nEvents : tree->GetEntries();
@@ -260,11 +261,9 @@ int main(int argc, char* argv[]){
 	  if (tree->LoadTree(iEvent)<0) break;
           if (iEvent % 25000 == 0 )
             std::cout << "[" << argv[0] << "] processing event : " << iEvent << "\r" << std::flush;
-          evBranch = tree->GetBranch("event");
-          evBranch->SetAddress(&ev);
-	  evBranch->GetEntry(iEvent);
+          tree->GetEvent(iEvent); 
 	  float weight = ev->genInfos.size() > 0 ?
-	    ev->genInfos[0].genWeight/fabs(ev->genInfos[0].genWeight) : 1.;
+          ev->genInfos[0].genWeight/fabs(ev->genInfos[0].genWeight) : 1.;
 
 	  if(plotter.m_sampleConfig.applyReweighting==true)
 	    weight *= ev->nVtx < 60 ? tnpConfig.pu_weights[ev->nVtx] : 0;

@@ -273,6 +273,8 @@ int main(int argc, char* argv[]){
       //if (!tree) inputFile->GetObject("MuonPogTree/MUONPOGTREE",tree);
       tree = openFileOrDir(fileName.Data()); 
 
+      tree->SetBranchAddress("event", &ev);
+
       // Watch number of entries
       int nEntries = plotter.m_sampleConfig.nEvents > 0 ? plotter.m_sampleConfig.nEvents : tree->GetEntries();
       std::cout << "[" << argv[0] << "] Number of entries = " << nEntries << std::endl;
@@ -285,11 +287,9 @@ int main(int argc, char* argv[]){
 
 	  if (iEvent % 25000 == 0 )
 	    std::cout << "[" << argv[0] << "] processing event : " << iEvent << "\r" << std::flush;
-          evBranch = tree->GetBranch("event");
-          evBranch->SetAddress(&ev);
-          evBranch->GetEntry(iEvent);
+          tree->GetEvent(iEvent);
 	  float weight = ev->genInfos.size() > 0 ?
-	    ev->genInfos[0].genWeight/fabs(ev->genInfos[0].genWeight) : 1.;
+	  ev->genInfos[0].genWeight/fabs(ev->genInfos[0].genWeight) : 1.;
 	 
 	  // CB to be fixed when kown what to do for MC !!!
 
