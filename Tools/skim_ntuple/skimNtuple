@@ -9,11 +9,15 @@ ROOTINCDIR=`$ROOTSYS/bin/root-config --incdir`
 
 BASETREEDIR="../src"
 
-echo "[variableComparisonPlots]: Compiling"
+echo "[$0]: Compiling"
 rootcling -f MuonPogTreeDict.C -c ${BASETREEDIR}/MuonPogTree.h ${BASETREEDIR}/MuonPogTreeLinkDef.h
 
 g++ -g -std=gnu++11 -I${ROOTINCDIR} ${fileC} MuonPogTreeDict.C ${ROOTLIBS} -lX11 -lboost_system -lboost_filesystem -o ${fileEXE}
 
-echo "[variableComparisonPlots]: Running with parameters $@" 
+echo "[$0]: Running with parameters $@" 
 ${fileEXE} $@
+
+rm MuonPogTreeDict* ${fileEXE}
+
+
 
