@@ -523,7 +523,14 @@ void MuonEventDumper::printMuons(const edm::Handle<edm::View<reco::Muon> > & muo
       
       if (!mu.outerTrack().isNull())
 	printTrack(mu.outerTrack().get(),"STANDALONE");
-     
+
+      if (!mu.innerTrack().isNull())
+	{
+	  std::cout << "[Inner track algos] : algo :" << mu.innerTrack()->algo()
+		    << " , original algo :" << mu.innerTrack()->originalAlgo()
+		    << std::endl;
+	}
+
       if (mu.isTimeValid())
 	{
 	  const reco::MuonTime time = mu.time();
