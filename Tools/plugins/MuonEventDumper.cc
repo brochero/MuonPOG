@@ -109,7 +109,8 @@ private:
 
   edm::EDGetTokenT<edm::View<reco::Track> > adHocTrackToken_;
   std::string adHocTrackLabel_;  
-  
+
+  float muonMinPt_;
 
 };
 
@@ -142,7 +143,10 @@ MuonEventDumper::MuonEventDumper( const edm::ParameterSet & cfg )
   tag = cfg.getUntrackedParameter<edm::InputTag>("AdHocTrackTag", edm::InputTag("AdHocTracks"));
   if (tag.label() != "none") adHocTrackToken_ = consumes<edm::View<reco::Track> >(tag);
 
+  muonMinPt_ = cfg.getUntrackedParameter<double>("MuonMinPt", -1.);
+
   adHocTrackLabel_ = tag.encode();
+
 
 }
 
@@ -167,6 +171,7 @@ void MuonEventDumper::endJob()
 void MuonEventDumper::analyze (const edm::Event & ev, const edm::EventSetup &)
 {
 
+  std::cout << "[MuonEventDumper::analyze ******************************************************************************]" << std::endl;
   std::cout << "[MuonEventDumper::analyze]: "
 	    << "\nProcessing Run: " << ev.id().run()
 	    << "\tLumiBlock: " << ev.id().luminosityBlock()
@@ -222,6 +227,9 @@ void MuonEventDumper::analyze (const edm::Event & ev, const edm::EventSetup &)
 	  printTrack(&(*trackIt),adHocTrackLabel_);
 	}      
     }
+
+  std::cout << "[MuonEventDumper::analyze ******************************************************************************]\n\n" << std::endl;
+
   
 }
 
@@ -463,6 +471,12 @@ void MuonEventDumper::printMuons(const edm::Handle<edm::View<reco::Muon> > & muo
       const reco::Vertex & vertex = vertexes->at(0); // CB for now vertex is always valid, but add a protection	    
 
       std::cout << "[MUON DETAILS]: " << std::endl;
+
+      if (mu.pt() < muonMinPt_)
+	{
+	  std::cout << "Muon below minimum pT cut of " << muonMinPt_ << std::endl;
+	  continue;
+	}
       
       std::cout << "It is a : "
 		<< (mu.isStandAloneMuon() ? "STANDALONE " : "")

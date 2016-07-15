@@ -6,7 +6,7 @@ process = cms.Process("PRINT")
 options = VarParsing.VarParsing()
 
 options.register('globalTag',
-                 '76X_dataRun2_v5', #default value
+                 '80X_dataRun2_v8', #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.string,
                  "Global Tag")
@@ -22,6 +22,12 @@ options.register('runOnMiniAOD',
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.bool,
                  "Run on AOD or miniAOD")
+
+options.register('muonMinPt',
+                 -1., #default value
+                 VarParsing.VarParsing.multiplicity.singleton,
+                 VarParsing.VarParsing.varType.float,
+                 "Minimal pT cut for muons")
 
 options.register('runOnMC',
                  False, #default value
@@ -59,6 +65,8 @@ process.load("Configuration.StandardSequences.GeometryDB_cff")
 process.muonEventDumper = cms.EDAnalyzer("MuonEventDumper",
                              TrigResultsTag = cms.untracked.InputTag("none"),
                              TrigSummaryTag = cms.untracked.InputTag("none"),
+                                   
+                             MuonMinPt = cms.untracked.double(options.muonMinPt),
 
                              MuonTag          = cms.untracked.InputTag("muons"),
                              PrimaryVertexTag = cms.untracked.InputTag("offlinePrimaryVertices"),
@@ -85,4 +93,4 @@ if options.runOnMC :
 
 process.AOutput = cms.EndPath(process.muonEventDumper)
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
