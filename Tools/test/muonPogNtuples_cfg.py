@@ -61,7 +61,11 @@ if options.hltPathFilter == "all" :
     filterCut = "all"
 elif options.hltPathFilter == "IsoMu20" :
     pathCut   = "HLT_IsoMu20_v"
-    filterCut = "hltL3crIsoL1sMu16L1f0L2f10QL3f20QL3trkIsoFiltered0p09"
+    if options.runOnMC :
+        filterCut = "hltL3crIsoL1sMu16L1f0L2f10QL3f20QL3trkIsoFiltered0p09"
+    else :
+        filterCut = "hltL3crIsoL1sMu18L1f0L2f10QL3f20QL3trkIsoFiltered0p09"
+        
 else :
     print "[" + sys.argv[0] + "]:", "hltPathFilter=", options.hltPathFilter, "is not a valid parameter!"
     sys.exit(100)
@@ -87,7 +91,7 @@ process.source = cms.Source("PoolSource",
 )
 
 files = subprocess.check_output([ "/afs/cern.ch/project/eos/installation/0.3.15/bin/eos.select", "ls", options.eosInputFolder ])
-process.source.fileNames = [ options.eosInputFolder+"/"+f for f in files.split() ]    
+process.source.fileNames = [ options.eosInputFolder+"/"+f for f in files.split() ]  
 
 process.load("Configuration.StandardSequences.GeometryRecoDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_38T_cff")

@@ -4,13 +4,10 @@ Collection of MuonPOG related tools
 ## Installation instructions
 
 ```bash
-cmsrel CMSSW_8_0_4 # Just an example release, works in CMSSW >= 74X at present 
-cd CMSSW_8_0_4/src/
+cmsrel CMSSW_8_0_7_patch2 # Just an example release, works in CMSSW >= 74X at present 
+cd CMSSW_8_0_7_patch2/src/
 
-git clone https://github.com/battibass/MuonPOG/
-
-cd MuonPOG
-git checkout 80X
+git clone https://github.com/battibass/MuonPOG/ -b 80X
 
 cmsenv
 scramv1 b -j 5
@@ -22,11 +19,21 @@ A duper, printing event information relevant for muons is available in :  MuonPO
 
 It prints HLT, GEN level, beam spot, vertex and muon information. It works both in AOD and miniAOD.
 
-To dump information from a given event :
+To find a file and copy follow the instructions in:
+
+```bash
+cmsenv
+edmPickEvents.py --help
+```
+Then, to dump information from a given event :
 
 ```bash
 cd MuonPOG/Tools/test/
-cmsRun muonPrinter_cfg.py # modify files according to your needs
+cmsenv
+python muonPrinter_cfg.py --help
+
+# Then, for example
+cmsRun muonPrinter_cfg.py runOnMiniAOD=False inputFile=file://./260373_249111510_AOD_76X.root plotTriggerInfo=True
 ```
 
 ## Ntuples
