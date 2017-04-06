@@ -102,6 +102,9 @@ namespace muon_pog {
   class Muon {
   public:
 
+    Int_t isBadFilter;   // Moriond17 MET Filter
+    Int_t isCloneFilter; // Moriond17 MET Filter
+
     Float_t pt;  // pt [GeV]   
     Float_t eta; // eta
     Float_t phi; // phi

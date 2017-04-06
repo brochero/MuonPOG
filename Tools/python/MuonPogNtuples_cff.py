@@ -12,7 +12,13 @@ def appendMuonPogNtuple(process, runOnMC, processTag="HLT", ntupleFileName="Muon
 
     if runOnMC :
         process.load("MuonPOG.Tools.PrunedGenParticles_cfi")
-        process.muonPogNtuple = cms.Sequence(process.prunedGenParticles + process.MuonPogTree)
+
+        process.load("RecoMET.METFilters.badGlobalMuonTaggersAOD_cff")
+        process.muonPogNtuple = cms.Sequence(process.noBadGlobalMuons + process.prunedGenParticles + process.MuonPogTree)
+        #process.muonPogNtuple = cms.Sequence(process.badGlobalMuonTagger + process.cloneGlobalMuonTagger + process.prunedGenParticles + process.MuonPogTree)
+
+        #process.muonPogNtuple = cms.Sequence(process.prunedGenParticles + process.MuonPogTree)
+        #process.Tracer = cms.Service("Tracer")
     else :
         process.muonPogNtuple = cms.Sequence(process.MuonPogTree)
         process.MuonPogTree.PileUpInfoTag = cms.untracked.InputTag("none")

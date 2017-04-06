@@ -7,7 +7,7 @@ import sys
 options = VarParsing.VarParsing()
 
 options.register('globalTag',
-                 '74X_dataRun2_Prompt_v4', #default value
+                 '81X_mcRun2_asymptotic_v2', #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.string,
                  "Global Tag")
@@ -25,13 +25,13 @@ options.register('eosInputFolder',
                  "EOS folder with input files")
 
 options.register('ntupleName',
-                 './muonPOGNtuple_DATA_SingleMu.root', #default value
+                 './muonPOGNtuple_METMoriond17Filter.root', #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.string,
                  "Folder and name ame for output ntuple")
 
 options.register('runOnMC',
-                 False, #default value
+                 True, #default value
                  VarParsing.VarParsing.multiplicity.singleton,
                  VarParsing.VarParsing.varType.bool,
                  "Run on DATA or MC")
@@ -87,12 +87,19 @@ process.source = cms.Source("PoolSource",
 )
 
 files = subprocess.check_output([ "/afs/cern.ch/project/eos/installation/0.3.15/bin/eos.select", "ls", options.eosInputFolder ])
-process.source.fileNames = [ options.eosInputFolder+"/"+f for f in files.split() ]    
+#process.source.fileNames = [ options.eosInputFolder+"/"+f for f in files.split() ]    
+
+process.source.fileNames = [
+    'file:/afs/cern.ch/user/b/brochero/brochero_WorkArea/MuonIsolation-80X/HIPStudies/CMSSW_8_1_0_pre9/src/MuonPOG/Tools/test/0C092EFC-2F53-E611-8CB8-0025905B8600.root',
+    #'file:/afs/cern.ch/user/b/brochero/brochero_WorkArea/MuonIsolation-80X/MoriondFilter/CMSSW_8_1_0_pre9/src/MuonPOG/Tools/test/out.root',
+                            ]
 
 process.load("Configuration.StandardSequences.GeometryRecoDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 #process.load("Geometry.CommonDetUnit.globalTrackingGeometry_cfi")
 #process.load("RecoMuon.DetLayers.muonDetLayerGeometry_cfi")
+
+#process.load("RecoMET.METFilters.badGlobalMuonTaggersAOD_cff")
 
 from MuonPOG.Tools.MuonPogNtuples_cff import appendMuonPogNtuple, customiseHlt, customiseMuonCuts
     
